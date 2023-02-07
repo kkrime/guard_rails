@@ -1,0 +1,22 @@
+[postgres]
+host     = "localhost"
+port     = 5432
+user     = "postgres"
+password = "postgres"
+dbname   = "guard_rails"
+
+[[TokenScanner]]
+token = 'private_key\w+'
+type = "private key leak"
+ruleId = "0001"
+[TokenScanner.metadata]
+description = "private key leak"
+severity = "HIGH"
+
+[[TokenScanner]]
+token = 'public_key\w+'
+type = "public key leak"
+ruleId = "0002"
+[TokenScanner.metadata]
+description = "public key leak"
+severity = "HIGH"

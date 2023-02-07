@@ -23,5 +23,4 @@ func (hc *httpClient) IsUrlReachable(url string) bool {
 	}
 
 	return true
-
 }

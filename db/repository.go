@@ -2,23 +2,11 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"guard_rails/model"
-
-	"github.com/jmoiron/sqlx"
 )
 
-type repositoryDb struct {
-	db *sqlx.DB
-}
-
-func NewRepositoryDb(db *sqlx.DB) RepositoryDb {
-
-	return &repositoryDb{
-		db: db,
-	}
-}
-
-func (rd *repositoryDb) AddRepository(ctx context.Context, repository *model.Repository) error {
+func (rd *db) AddRepository(ctx context.Context, repository *model.Repository) error {
 
 	statement := `
         INSERT INTO
@@ -39,22 +27,56 @@ func (rd *repositoryDb) AddRepository(ctx context.Context, repository *model.Rep
 	return err
 }
 
-func (rd *repositoryDb) GetRepository(ctx context.Context, repositoryName string) ([]model.Repository, error) {
+func (rd *db) GetRepositoryByName(ctx context.Context, repositoryName string) (*model.Repository, error) {
 	var repository []model.Repository
 
 	statement := `
         SELECT * FROM
             repositories
         WHERE
-            name = $1
+            name = $1 AND
+            deleted_at IS null
         ;`
 
 	err := rd.db.SelectContext(ctx, &repository, statement, repositoryName)
+	fmt.Printf("err = %+v\n", err)
 
-	return repository, err
+	if err != nil {
+		return nil, err
+	}
+
+	if repository == nil {
+		return nil, nil
+	}
+
+	return &repository[0], err
 }
 
-func (rd *repositoryDb) UpdateRepository(ctx context.Context, repository *model.Repository) (int64, error) {
+func (rd *db) GetRepositoryById(repositoryId int64) (*model.Repository, error) {
+	var repository []model.Repository
+
+	statement := `
+        SELECT * FROM
+            repositories
+        WHERE
+            id = $1 AND
+            deleted_at IS null
+        ;`
+
+	err := rd.db.Select(&repository, statement, repositoryId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if repository == nil {
+		return nil, nil
+	}
+
+	return &repository[0], err
+}
+
+func (rd *db) UpdateRepository(ctx context.Context, repository *model.Repository) (int64, error) {
 	var rowsAffected int64
 
 	statement := `
@@ -79,12 +101,14 @@ func (rd *repositoryDb) UpdateRepository(ctx context.Context, repository *model.
 	return rowsAffected, nil
 }
 
-func (rd *repositoryDb) DeleteRepository(ctx context.Context, repositoryName string) (int64, error) {
+func (rd *db) DeleteRepository(ctx context.Context, repositoryName string) (int64, error) {
 	var rowsAffected int64
 
 	statement := `
-        DELETE FROM
+        UPDATE
             repositories
+        SET
+            deleted_at = now()
         WHERE
             name = $1
         ;`

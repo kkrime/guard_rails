@@ -1,5 +1,15 @@
 package controller
 
+import (
+	"context"
+	"encoding/json"
+	"guard_rails/errors"
+
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+	"github.com/sirupsen/logrus"
+)
+
 type response struct {
 	Status  string      `json:"status"`
 	Message string      `json:"message,omitempty"`
@@ -18,4 +28,22 @@ func GetFailResponse(err string) *response {
 		Status: fail,
 		Error:  err,
 	}
+}
+
+func Error(c *gin.Context, err error) {
+
+	switch err := err.(type) {
+	case *errors.RestError:
+		c.JSON(err.Code, GetFailResponse(err.Err))
+	case validator.ValidationErrors:
+		c.JSON(400, GetFailResponse(Internal_Error))
+	case *json.InvalidUnmarshalError:
+		c.JSON(400, GetFailResponse(Internal_Error))
+	default:
+		c.JSON(500, GetFailResponse(Internal_Error))
+	}
+}
+
+func createLogger(gl getLogger, ctx context.Context) *logrus.Entry {
+	return gl.getLogger().WithContext(ctx).WithField("requestID", ctx.Value("X-Request-ID"))
 }

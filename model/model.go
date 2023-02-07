@@ -1,9 +1,12 @@
 package model
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Repository struct {
-	Id        string    `db:"id" json:"-"`
+	Id        int64     `db:"id" json:"-"`
 	Name      string    `json:"name" binding:"required,alphanum" db:"name"`
 	Url       string    `json:"url" binding:"required,url" db:"url"`
 	CreatedAt time.Time `db:"created_at" json:"-"`
@@ -11,4 +14,50 @@ type Repository struct {
 	// time.Time cannot be set to nil (for records that have not been deleted)
 	// so setting DeletedAt to *time.Time
 	DeletedAt *time.Time `db:"deleted_at" json:"-"`
+}
+
+type ScanStatus string
+
+const (
+	Queued     ScanStatus = "QUEUED"
+	InProgress ScanStatus = "IN PROGRESS"
+	Success    ScanStatus = "SUCCESS"
+	Failure    ScanStatus = "FAILURE"
+)
+
+type Scan struct {
+	Id           int64      `db:"id"`
+	RepositoryId int64      `db:"repository_id"`
+	Status       ScanStatus `db:"status"`
+	Findings     Findings   `db:"findings"`
+	CreatedAt    time.Time  `db:"created_at" json:"-"`
+	StartedAt    *time.Time `db:"started_at" json:"-"`
+	EndeddAt     *time.Time `db:"ended_at" json:"-"`
+}
+
+type Findings []Finding
+
+type Finding struct {
+	Type     string `json:"type"`
+	RuleID   string `json:"ruleId"`
+	Location struct {
+		Path      string `json:"path"`
+		Positions struct {
+			Begin struct {
+				Line int `json:"line"`
+			} `json:"begin"`
+		} `json:"positions"`
+	} `json:"location"`
+	Metadata struct {
+		Description string `json:"description"`
+		Severity    string `json:"severity"`
+	} `json:"metadata"`
+}
+
+func (f *Findings) Scan(src interface{}) error {
+	if src == nil {
+		return nil
+	}
+	input := src.([]uint8)
+	return json.Unmarshal(input, &f)
 }

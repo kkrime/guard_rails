@@ -1,29 +1,26 @@
 package server
 
 import (
-	"encoding/json"
 	"guard_rails/controller"
-	"guard_rails/errors"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"github.com/jmoiron/sqlx"
+	"github.com/sirupsen/logrus"
+	requestid "github.com/sumit-tembe/gin-requestid"
 )
 
-const (
-	Invalid_Input  = "invalid input data"
-	Internal_Error = "internal error"
-)
+func Init(db *sqlx.DB, log *logrus.Logger) *gin.Engine {
 
-func Init(db *sqlx.DB) *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Logger())
-	router.Use(ErrorHandler)
+	router.Use(requestid.RequestID(nil))
+	router.Use(gin.LoggerWithConfig(requestid.GetLoggerConfig(nil, nil, nil)))
 
 	v1 := router.Group("v1")
+
 	// repository
 	repositoryGroup := v1.Group("repository")
-	repositoryController := controller.NewRepoitoryController(db)
+	repositoryController := controller.NewRepoitoryController(db, log)
 
 	// add repository
 	repositoryGroup.POST("", repositoryController.AddRepository)
@@ -34,22 +31,12 @@ func Init(db *sqlx.DB) *gin.Engine {
 	// delete repository
 	repositoryGroup.DELETE("/:name", repositoryController.DeleteRepository)
 
+	// scan
+	scanGroup := repositoryGroup.Group("scan")
+	repositoryScanController := controller.NewScanController(db, log)
+
+	scanGroup.POST("/:name", repositoryScanController.Scan)
+	scanGroup.GET("/:name", repositoryScanController.GetScans)
+
 	return router
-}
-
-func ErrorHandler(c *gin.Context) {
-	c.Next()
-
-	for _, err := range c.Errors {
-		switch err := err.Err.(type) {
-		case validator.ValidationErrors:
-			c.JSON(400, gin.H{"error": controller.GetFailResponse(Invalid_Input)})
-		case *json.InvalidUnmarshalError:
-			c.JSON(400, gin.H{"error": controller.GetFailResponse(Invalid_Input)})
-		case *errors.RestError:
-			c.JSON(err.Code, controller.GetFailResponse(err.Err))
-		default:
-			c.JSON(500, controller.GetFailResponse(Internal_Error))
-		}
-	}
 }

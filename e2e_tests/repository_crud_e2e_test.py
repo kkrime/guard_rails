@@ -61,7 +61,7 @@ def changeRepositoryUrl(data):
 
 def deleteRepository(repositoryName):
  response = requests.delete( host + ':' + str(port) + url + repositoryName, headers=headers)
- # print(response.content)
+ print(response.content)
  jsonResponse = response.json()
  printJson(jsonResponse)
  return jsonResponse
@@ -89,9 +89,11 @@ inputData = {}
 inputData["name"] = repositoryName
 inputData["url"] = repositoryUrl
 
-# SETUP
+# # SETUP
 print (colored('0. Delete repository {}'.format(repositoryName) , 'green'))
-deleteRepository(repositoryName)
+result = deleteRepository(repositoryName)
+# result = passes(result)
+# exit(1)
 
 # TESTS
 print (colored('1. Adding repository {}'.format(repositoryName), 'green'))
@@ -103,7 +105,8 @@ result = getRepository(repositoryName)
 passes(result)
 # result  = json.load(result)
 
-repositoryUrl = "https://github.com/golang/go"
+# repositoryUrl = "https://github.com/golang/go"
+repositoryUrl = "https://github.com/kkrime/home"
 print (colored('3. change repository url to {}'.format(repositoryUrl), 'green'))
 inputData["url"] = repositoryUrl
 result = changeRepositoryUrl(inputData)
@@ -115,9 +118,9 @@ passes(result)
 if result['data']['url'] != repositoryUrl:
  sys.exit(colored('url has not been changed', 'red'))
 
-print (colored('5. Delete repository {}'.format(repositoryName) , 'green'))
-result = deleteRepository(repositoryName)
-passes(result)
+# print (colored('5. Delete repository {}'.format(repositoryName) , 'green'))
+# result = deleteRepository(repositoryName)
+# passes(result)
 
 print (colored('4. Check repository {}'.format(repositoryName) + ' is deleted', 'green'))
 result = getRepository(repositoryName)

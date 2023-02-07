@@ -10,8 +10,10 @@ CREATE TABLE public.repositories(
 	updated_at TIMESTAMP DEFAULT NOW(),
 	deleted_at TIMESTAMP DEFAULT NULL
 );
-CREATE UNIQUE INDEX no_duplicate_repository_names ON public.repositories(name);
-CREATE UNIQUE INDEX no_duplicate_repository_urls  ON public.repositories(url);
+CREATE UNIQUE INDEX no_duplicate_repository_names ON public.repositories(name,deleted_at)
+   WHERE deleted_at IS null;
+CREATE UNIQUE INDEX no_duplicate_repository_urls  ON public.repositories(url)
+   WHERE deleted_at IS null;
 
 CREATE TYPE public.status AS ENUM (
 	'QUEUED',

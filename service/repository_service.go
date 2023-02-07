@@ -11,6 +11,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
+	"github.com/sirupsen/logrus"
 )
 
 type repositoryService struct {
@@ -18,9 +19,9 @@ type repositoryService struct {
 	repositoryDb db.RepositoryDb
 }
 
-func NewRepositoryService(database *sqlx.DB) RepositoryService {
+func NewRepositoryServiceProvider(database *sqlx.DB) RepositoryServiceProvider {
 	httpClient := client.NewHttpCleint()
-	repositoryDb := db.NewRepositoryDb(database)
+	repositoryDb := db.NewDb(database)
 
 	return &repositoryService{
 		httpClient:   httpClient,
@@ -28,9 +29,22 @@ func NewRepositoryService(database *sqlx.DB) RepositoryService {
 	}
 }
 
-func (rs *repositoryService) AddRepository(ctx context.Context, repository *model.Repository) error {
+func (rs *repositoryService) NewRepositoryServiceInstance(log *logrus.Entry) RepositoryService {
+
+	return &repositoryServiceInstance{
+		repositoryService: rs,
+		log:               log,
+	}
+}
+
+type repositoryServiceInstance struct {
+	*repositoryService
+	log *logrus.Entry
+}
+
+func (rsi *repositoryServiceInstance) AddRepository(ctx context.Context, repository *model.Repository) error {
 	// check if repository url is valid
-	reachable := rs.httpClient.IsUrlReachable(repository.Url)
+	reachable := rsi.httpClient.IsUrlReachable(repository.Url)
 
 	if !reachable {
 		return errors.NewRestError(424, Unable_To_Reach_Repository)
@@ -38,7 +52,7 @@ func (rs *repositoryService) AddRepository(ctx context.Context, repository *mode
 
 	repository.Name = strings.ToLower(repository.Name)
 
-	err := rs.repositoryDb.AddRepository(ctx, repository)
+	err := rsi.repositoryDb.AddRepository(ctx, repository)
 
 	if err != nil {
 		// check if duplicate add
@@ -52,9 +66,9 @@ func (rs *repositoryService) AddRepository(ctx context.Context, repository *mode
 	return err
 }
 
-func (rs *repositoryService) GetRepository(ctx context.Context, repositoryName string) (*model.Repository, error) {
+func (rsi *repositoryServiceInstance) GetRepository(ctx context.Context, repositoryName string) (*model.Repository, error) {
 
-	repository, err := rs.repositoryDb.GetRepository(ctx, repositoryName)
+	repository, err := rsi.repositoryDb.GetRepositoryByName(ctx, repositoryName)
 	if err != nil {
 		return nil, err
 	}
@@ -63,18 +77,18 @@ func (rs *repositoryService) GetRepository(ctx context.Context, repositoryName s
 		return nil, errors.NewRestError(404, Repository_Not_Found)
 	}
 
-	return &repository[0], err
+	return repository, err
 }
 
-func (rs *repositoryService) UpdateRepository(ctx context.Context, repository *model.Repository) error {
+func (rsi *repositoryServiceInstance) UpdateRepository(ctx context.Context, repository *model.Repository) error {
 	// check if repository url is valid
-	reachable := rs.httpClient.IsUrlReachable(repository.Url)
+	reachable := rsi.httpClient.IsUrlReachable(repository.Url)
 
 	if !reachable {
 		return errors.NewRestError(424, Unable_To_Reach_Repository)
 	}
 
-	rowsAffected, err := rs.repositoryDb.UpdateRepository(ctx, repository)
+	rowsAffected, err := rsi.repositoryDb.UpdateRepository(ctx, repository)
 	if err != nil {
 		return err
 	}
@@ -86,9 +100,9 @@ func (rs *repositoryService) UpdateRepository(ctx context.Context, repository *m
 	return nil
 }
 
-func (rs *repositoryService) DeleteRepository(ctx context.Context, repositoryName string) error {
+func (rsi *repositoryServiceInstance) DeleteRepository(ctx context.Context, repositoryName string) error {
 
-	rowsAffected, err := rs.repositoryDb.DeleteRepository(ctx, repositoryName)
+	rowsAffected, err := rsi.repositoryDb.DeleteRepository(ctx, repositoryName)
 	if err != nil {
 		return err
 	}

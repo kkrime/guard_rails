@@ -1,27 +1,40 @@
 package main
 
 import (
+	"fmt"
+	"guard_rails/config"
 	"guard_rails/db"
+	"guard_rails/logger"
 	"guard_rails/server"
 
-	"log"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
-	if err := run(); err != nil {
+
+	log := logger.CreateNewLogger()
+	log.ReportCaller = true
+
+	if err := run(log); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func run() error {
+func run(log *logrus.Logger) error {
 
-	db, err := db.Init()
-
+	config, err := config.ReadConfig()
+	fmt.Println(config)
 	if err != nil {
 		return err
 	}
-	defer db.Close()
 
-	r := server.Init(db)
+	db, err := db.Init(&config.Postgres)
+	if err != nil {
+		return err
+	}
+
+	r := server.Init(db, log)
+	log.Info("starting server")
+
 	return r.Run()
 }
