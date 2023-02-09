@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"guard_rails/config"
 	"time"
 )
 
@@ -37,21 +38,23 @@ type Scan struct {
 
 type Findings []Finding
 
+type Location struct {
+	Path      string    `json:"path"`
+	Positions Positions `json:"positions"`
+}
+
+type Positions struct {
+	Begin Begin `json:"begin"`
+}
+
+type Begin struct {
+	Line int64 `json:"line"`
+}
+
 type Finding struct {
-	Type     string `json:"type"`
-	RuleID   string `json:"ruleId"`
-	Location struct {
-		Path      string `json:"path"`
-		Positions struct {
-			Begin struct {
-				Line int `json:"line"`
-			} `json:"begin"`
-		} `json:"positions"`
-	} `json:"location"`
-	Metadata struct {
-		Description string `json:"description"`
-		Severity    string `json:"severity"`
-	} `json:"metadata"`
+	*config.ScanData
+	Location Location         `json:"location"`
+	MetaData *config.MetaData `json:"metadata"`
 }
 
 func (f *Findings) Scan(src interface{}) error {

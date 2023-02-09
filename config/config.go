@@ -4,7 +4,7 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-type Postgres struct {
+type PostgresConfig struct {
 	Host     string
 	Port     int64
 	User     string
@@ -12,21 +12,35 @@ type Postgres struct {
 	Dbname   string
 }
 
-type MetaData struct {
-	Description string
-	Severity    string
+type GitConfig struct {
+	CloneLocation string
 }
 
-type TokenScanner struct {
-	Token    string
-	Type     string
-	RuleId   string
-	MetaData MetaData
+type QueueConfig struct {
+	QueueSize int64
+}
+
+type MetaData struct {
+	Description string `json:"description"`
+	Severity    string `json:"severity"`
+}
+
+type ScanData struct {
+	Token  string `json:"-"`
+	Type   string `json:"type"`
+	RuleId string `json:"rule_id"`
+}
+
+type TokenScannerConfig struct {
+	ScanData ScanData
+	MetaData MetaData `json:"metadata"`
 }
 
 type Config struct {
-	Postgres     Postgres
-	TokenScanner []TokenScanner
+	Postgres     PostgresConfig
+	TokenScanner []TokenScannerConfig
+	Queue        QueueConfig
+	Git          GitConfig
 }
 
 func ReadConfig() (*Config, error) {

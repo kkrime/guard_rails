@@ -1,6 +1,7 @@
 package server
 
 import (
+	"guard_rails/config"
 	"guard_rails/controller"
 
 	"github.com/gin-gonic/gin"
@@ -9,7 +10,7 @@ import (
 	requestid "github.com/sumit-tembe/gin-requestid"
 )
 
-func Init(db *sqlx.DB, log *logrus.Logger) *gin.Engine {
+func Init(db *sqlx.DB, config *config.Config, log *logrus.Logger) (*gin.Engine, error) {
 
 	router := gin.New()
 	router.Use(gin.Logger())
@@ -33,10 +34,13 @@ func Init(db *sqlx.DB, log *logrus.Logger) *gin.Engine {
 
 	// scan
 	scanGroup := repositoryGroup.Group("scan")
-	repositoryScanController := controller.NewScanController(db, log)
+	repositoryScanController, err := controller.NewScanController(db, config, log)
+	if err != nil {
+		return nil, err
+	}
 
 	scanGroup.POST("/:name", repositoryScanController.Scan)
 	scanGroup.GET("/:name", repositoryScanController.GetScans)
 
-	return router
+	return router, nil
 }

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"guard_rails/config"
 	"guard_rails/service"
 	"strings"
 
@@ -14,13 +15,16 @@ type scanController struct {
 	log                 *logrus.Logger
 }
 
-func NewScanController(db *sqlx.DB, log *logrus.Logger) ScanController {
+func NewScanController(db *sqlx.DB, config *config.Config, log *logrus.Logger) (ScanController, error) {
 
-	ScanServiceProvider := service.NewScanServiceProvider(db)
+	ScanServiceProvider, err := service.NewScanServiceProvider(db, config)
+	if err != nil {
+		return nil, err
+	}
 	return &scanController{
 		scanServiceProvider: ScanServiceProvider,
 		log:                 log,
-	}
+	}, nil
 }
 
 func (sc *scanController) getLogger() *logrus.Logger {

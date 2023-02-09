@@ -23,7 +23,7 @@ type db struct {
 	db *sqlx.DB
 }
 
-func NewDb(database *sqlx.DB) *db {
+func NewDbObject(database *sqlx.DB) *db {
 
 	return &db{
 		db: database,
@@ -46,7 +46,7 @@ type ScanDb interface {
 	StopScan(scanId int64, findings model.Findings, status model.ScanStatus) error
 }
 
-func Init(config *config.Postgres) (*sqlx.DB, error) {
+func Init(config *config.PostgresConfig) (*sqlx.DB, error) {
 	// const (
 	// 	host     = "localhost"
 	// 	port     = 5432

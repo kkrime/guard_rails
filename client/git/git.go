@@ -1,7 +1,9 @@
 package git
 
 import (
+	"fmt"
 	"guard_rails/client"
+	"guard_rails/config"
 	"guard_rails/model"
 	"io"
 
@@ -9,21 +11,30 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
-type gitClientProvider struct{}
-
-func (gcp *gitClientProvider) CreateNewGitClient() client.GitClient {
-	return &gitClient{}
+type gitClientProvider struct {
+	config *config.GitConfig
 }
 
-func NewGitCleintProvider() client.GitClientProvider {
-	return &gitClientProvider{}
+func NewGitCleintProvider(config *config.GitConfig) client.GitClientProvider {
+	return &gitClientProvider{
+		config: config,
+	}
 }
+
+// func (gcp *gitClientProvider) CreateNewGitClient() client.GitClient {
+// 	return &gitClient{
+// 		gitClientProvider: gcp,
+// 	}
+// }
 
 func (gcp *gitClientProvider) NewGitClient() client.GitClient {
-	return &gitClient{}
+	return &gitClient{
+		gitClientProvider: gcp,
+	}
 }
 
 type gitClient struct {
+	*gitClientProvider
 	repository *git.Repository
 	treeIter   *object.TreeIter
 	tree       *object.Tree
@@ -33,7 +44,8 @@ type gitClient struct {
 func (gc *gitClient) Clone(repository *model.Repository) error {
 	var err error
 
-	path := "./repositories/" + repository.Name
+	fmt.Println(gc.config)
+	path := gc.config.CloneLocation + repository.Name
 
 	// clone repository
 	gc.repository, err = git.PlainClone(path, false, &git.CloneOptions{

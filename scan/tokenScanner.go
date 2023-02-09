@@ -6,21 +6,24 @@ import (
 	"regexp"
 
 	"guard_rails/client"
+	"guard_rails/config"
 	"guard_rails/model"
 )
 
 type tokenScanner struct {
-	token *regexp.Regexp
+	token  *regexp.Regexp
+	config *config.TokenScannerConfig
 }
 
-func NewTokenScanner(token string) (RepositoryScanner, error) {
-	tokenRegex, err := regexp.Compile(`zzzzzzzzzzzzzzzzzzzzzzz`)
+func NewTokenScanner(tokenConfig *config.TokenScannerConfig) (RepositoryScanner, error) {
+	tokenRegex, err := regexp.Compile(tokenConfig.ScanData.Token)
 	if err != nil {
 		return nil, err
 	}
 
 	return &tokenScanner{
-		token: tokenRegex,
+		token:  tokenRegex,
+		config: tokenConfig,
 	}, nil
 }
 
@@ -46,7 +49,7 @@ func (ts *tokenScanner) Scan(file client.File) *ScanResult {
 
 	reader := bufio.NewReader(fileReader)
 
-	lineNumber := 0
+	var lineNumber int64
 	for {
 		lineNumber++
 
@@ -63,11 +66,19 @@ func (ts *tokenScanner) Scan(file client.File) *ScanResult {
 			break
 		}
 
-		// fmt.Printf("string(line) = %+v\n", string(line))
-
 		if ts.token.Match(line) {
+			// report finding
 			finding := model.Finding{
-				Type: "ddd",
+				ScanData: &ts.config.ScanData,
+				MetaData: &ts.config.MetaData,
+				Location: model.Location{
+					Path: file.Name(),
+					Positions: model.Positions{
+						Begin: model.Begin{
+							Line: lineNumber,
+						},
+					},
+				},
 			}
 			result.Findings = append(result.Findings, finding)
 			result.Passed = false

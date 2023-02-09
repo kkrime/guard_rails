@@ -21,7 +21,7 @@ type repositoryService struct {
 
 func NewRepositoryServiceProvider(database *sqlx.DB) RepositoryServiceProvider {
 	httpClient := client.NewHttpCleint()
-	repositoryDb := db.NewDb(database)
+	repositoryDb := db.NewDbObject(database)
 
 	return &repositoryService{
 		httpClient:   httpClient,

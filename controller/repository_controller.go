@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"guard_rails/model"
 	"guard_rails/service"
 	"strings"
@@ -33,6 +34,8 @@ func (rc *repositoryController) AddRepository(ctx *gin.Context) {
 
 	err := ctx.BindJSON(repository)
 	if err != nil {
+		fmt.Printf("%T", err)
+		AbortAndError(ctx, err)
 		return
 	}
 
@@ -41,7 +44,7 @@ func (rc *repositoryController) AddRepository(ctx *gin.Context) {
 
 	err = repositoryServiceInstance.AddRepository(ctx, repository)
 	if err != nil {
-		Error(ctx, err)
+		AbortAndError(ctx, err)
 		return
 	}
 
@@ -58,7 +61,7 @@ func (rc *repositoryController) GetRepository(ctx *gin.Context) {
 
 	repository, err := repositoryServiceInstance.GetRepository(ctx, repositoryName)
 	if err != nil {
-		Error(ctx, err)
+		AbortAndError(ctx, err)
 		return
 	}
 
@@ -73,6 +76,7 @@ func (rc *repositoryController) UpdateRepository(ctx *gin.Context) {
 
 	err := ctx.BindJSON(repository)
 	if err != nil {
+		AbortAndError(ctx, err)
 		return
 	}
 	repository.Name = strings.ToLower(repository.Name)
@@ -82,7 +86,7 @@ func (rc *repositoryController) UpdateRepository(ctx *gin.Context) {
 
 	err = repositoryServiceInstance.UpdateRepository(ctx, repository)
 	if err != nil {
-		Error(ctx, err)
+		AbortAndError(ctx, err)
 		return
 	}
 
@@ -99,7 +103,7 @@ func (rc *repositoryController) DeleteRepository(ctx *gin.Context) {
 
 	err := repositoryServiceInstance.DeleteRepository(ctx, repositoryName)
 	if err != nil {
-		Error(ctx, err)
+		AbortAndError(ctx, err)
 		return
 	}
 

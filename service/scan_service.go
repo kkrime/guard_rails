@@ -7,6 +7,7 @@ import (
 
 	"guard_rails/client"
 	"guard_rails/client/git"
+	"guard_rails/config"
 	"guard_rails/db"
 	"guard_rails/errors"
 	"guard_rails/model"
@@ -25,20 +26,23 @@ type scanService struct {
 	scanners          []scan.RepositoryScanner
 }
 
-func NewScanServiceProvider(database *sqlx.DB) ScanServiceProvider {
-	db := db.NewDb(database)
-	queue := make(chan *model.Scan, 4098)
+func NewScanServiceProvider(database *sqlx.DB, config *config.Config) (ScanServiceProvider, error) {
+	var scanners []scan.RepositoryScanner
 
-	tokenScanner, err := scan.NewTokenScanner("token")
-	if err != nil {
-		// return err
+	for _, scanConfig := range config.TokenScanner {
+
+		tokenScanner, err := scan.NewTokenScanner(&scanConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		scanners = append(scanners, tokenScanner)
 	}
 
-	scanners := []scan.RepositoryScanner{
-		tokenScanner,
-	}
+	db := db.NewDbObject(database)
+	gitClientProvider := git.NewGitCleintProvider(&config.Git)
 
-	gitClientProvider := git.NewGitCleintProvider()
+	queue := make(chan *model.Scan, config.Queue.QueueSize)
 
 	scanService := &scanService{
 		repositoryDb:      db,
@@ -50,15 +54,11 @@ func NewScanServiceProvider(database *sqlx.DB) ScanServiceProvider {
 
 	go scanService.scan()
 
-	return scanService
+	return scanService, nil
 }
 
 func (ss *scanService) NewScanServiceInstance(log *logrus.Entry) ScanService {
-
-	return &scanServiceInstance{
-		scanService: ss,
-		log:         log,
-	}
+	return &scanServiceInstance{scanService: ss, log: log}
 }
 
 type scanServiceInstance struct {
@@ -150,9 +150,10 @@ func (ss *scanService) scanRepository(scan *model.Scan) (err error) {
 
 	resultChann := make(chan *scanner.ScanResult)
 
+	// on error or panic mark the scan as FAILURE
 	defer func() {
-		// on error mark the scan as FAILURE
-		if err != nil {
+		paniced := recover()
+		if err != nil || paniced != nil {
 			// TODO log
 			ss.scanDb.StopScan(scan.Id, nil, model.Failure)
 		}
@@ -227,11 +228,8 @@ func (ss *scanService) scanRepository(scan *model.Scan) (err error) {
 	}()
 
 	ScannersWg.Wait()
-	fmt.Println(">>>>>>>>>>>>>>>>>>. 1")
 	close(resultChann)
-	fmt.Println(">>>>>>>>>>>>>>>>>>. 2")
 	readingResultsWg.Wait()
-	fmt.Println(">>>>>>>>>>>>>>>>>>. 3")
 
 	writeResultsErr := ss.scanDb.StopScan(scan.Id, findings, status)
 	if writeResultsErr != nil {

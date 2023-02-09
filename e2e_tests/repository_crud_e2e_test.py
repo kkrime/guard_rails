@@ -42,6 +42,7 @@ proccessEnv()
 # HELPER FUNCTIONS
 def addRepository(data):
  response = requests.post( host + ':' + str(port) + url, data=json.dumps(data), headers=headers)
+ print(response.content)
  jsonResponse = response.json()
  printJson(jsonResponse)
  return jsonResponse
@@ -81,6 +82,7 @@ def fails(data):
 # VARS
 repositoryName = "repository"
 repositoryUrl = "https://github.com/torvalds/linux"
+# repositoryUrl = "github.com/torvalds/linux"
 
 headers = { 'Content-Type':'application/json' }
 

@@ -30,15 +30,16 @@ func GetFailResponse(err string) *response {
 	}
 }
 
-func Error(c *gin.Context, err error) {
+func AbortAndError(c *gin.Context, err error) {
+	c.Abort()
 
 	switch err := err.(type) {
 	case *errors.RestError:
 		c.JSON(err.Code, GetFailResponse(err.Err))
 	case validator.ValidationErrors:
-		c.JSON(400, GetFailResponse(Internal_Error))
+		c.JSON(400, GetFailResponse(Invalid_Input))
 	case *json.InvalidUnmarshalError:
-		c.JSON(400, GetFailResponse(Internal_Error))
+		c.JSON(400, GetFailResponse(Invalid_Input))
 	default:
 		c.JSON(500, GetFailResponse(Internal_Error))
 	}
