@@ -23,6 +23,7 @@ type ScanServiceProvider interface {
 }
 
 type ScanService interface {
-	Scan(ctx context.Context, repositoryName string) error
+	QueueScan(ctx context.Context, repositoryName string) error
 	GetScan(ctx context.Context, repositoryName string) ([]model.Scan, error)
+	scanRepository(scan *model.Scan) ( /* return parameters added for testing purposes*/ findings []model.Finding, err error)
 }

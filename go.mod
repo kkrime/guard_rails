@@ -3,6 +3,7 @@ module guard_rails
 go 1.19
 
 require (
+	github.com/BurntSushi/toml v1.2.1
 	github.com/gin-gonic/gin v1.8.2
 	github.com/go-git/go-git/v5 v5.5.2
 	github.com/go-playground/validator/v10 v10.11.1
@@ -18,7 +19,6 @@ require (
 )
 
 require (
-	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20221026131551-cf6655e29de4 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect

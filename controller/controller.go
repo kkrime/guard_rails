@@ -13,7 +13,7 @@ type RepositoryController interface {
 }
 
 type ScanController interface {
-	Scan(ctx *gin.Context)
+	QueueScan(ctx *gin.Context)
 	GetScans(ctx *gin.Context)
 }
 

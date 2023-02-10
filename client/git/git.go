@@ -1,7 +1,6 @@
 package git
 
 import (
-	"fmt"
 	"guard_rails/client"
 	"guard_rails/config"
 	"guard_rails/model"
@@ -21,12 +20,6 @@ func NewGitCleintProvider(config *config.GitConfig) client.GitClientProvider {
 	}
 }
 
-// func (gcp *gitClientProvider) CreateNewGitClient() client.GitClient {
-// 	return &gitClient{
-// 		gitClientProvider: gcp,
-// 	}
-// }
-
 func (gcp *gitClientProvider) NewGitClient() client.GitClient {
 	return &gitClient{
 		gitClientProvider: gcp,
@@ -44,8 +37,7 @@ type gitClient struct {
 func (gc *gitClient) Clone(repository *model.Repository) error {
 	var err error
 
-	fmt.Println(gc.config)
-	path := gc.config.CloneLocation + repository.Name
+	path := gc.config.CloneLocation + "/" + repository.Name
 
 	// clone repository
 	gc.repository, err = git.PlainClone(path, false, &git.CloneOptions{
@@ -84,10 +76,6 @@ func (gc *gitClient) initalizeRepositoryIteration() error {
 		return err
 	}
 
-	// if gc.tree == nil {
-	// 	return err
-	// }
-
 	gc.filesIter = gc.tree.Files()
 
 	return nil
@@ -107,6 +95,7 @@ func (gc *gitClient) GetNextFile() (client.File, error) {
 	if file == nil {
 
 		// go to next tree
+		gc.treeIter.Close()
 		gc.tree, err = gc.treeIter.Next()
 		if err != nil {
 			if err == io.EOF {
@@ -121,6 +110,7 @@ func (gc *gitClient) GetNextFile() (client.File, error) {
 		}
 
 		// get next file
+		gc.filesIter.Close()
 		gc.filesIter = gc.tree.Files()
 
 		file, err = gc.filesIter.Next()

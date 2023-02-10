@@ -31,14 +31,14 @@ func (sc *scanController) getLogger() *logrus.Logger {
 	return sc.log
 }
 
-func (sc *scanController) Scan(ctx *gin.Context) {
+func (sc *scanController) QueueScan(ctx *gin.Context) {
 	repositoryName := ctx.Param("name")
 	repositoryName = strings.ToLower(repositoryName)
 
 	log := createLogger(sc, ctx)
 	scanServiceInstance := sc.scanServiceProvider.NewScanServiceInstance(log)
 
-	err := scanServiceInstance.Scan(ctx, repositoryName)
+	err := scanServiceInstance.QueueScan(ctx, repositoryName)
 	if err != nil {
 		ctx.Error(err)
 		return

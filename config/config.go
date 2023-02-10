@@ -32,8 +32,8 @@ type ScanData struct {
 }
 
 type TokenScannerConfig struct {
-	ScanData ScanData
-	MetaData MetaData `json:"metadata"`
+	ScanData *ScanData
+	MetaData *MetaData `json:"metadata"`
 }
 
 type Config struct {

@@ -29,3 +29,7 @@ func (f *File) Name() string {
 func (f *File) Reader() (io.ReadCloser, error) {
 	return f.file.Reader()
 }
+
+func (f *File) IsBinary() (bool, error) {
+	return f.file.IsBinary()
+}

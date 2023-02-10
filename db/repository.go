@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"guard_rails/model"
 )
 
@@ -39,7 +38,6 @@ func (rd *db) GetRepositoryByName(ctx context.Context, repositoryName string) (*
         ;`
 
 	err := rd.db.SelectContext(ctx, &repository, statement, repositoryName)
-	fmt.Printf("err = %+v\n", err)
 
 	if err != nil {
 		return nil, err
@@ -52,7 +50,7 @@ func (rd *db) GetRepositoryByName(ctx context.Context, repositoryName string) (*
 	return &repository[0], err
 }
 
-func (rd *db) GetRepositoryById(repositoryId int64) (*model.Repository, error) {
+func (rd *db) GetRepositoryById(ctx context.Context, repositoryId int64) (*model.Repository, error) {
 	var repository []model.Repository
 
 	statement := `
@@ -63,7 +61,7 @@ func (rd *db) GetRepositoryById(repositoryId int64) (*model.Repository, error) {
             deleted_at IS null
         ;`
 
-	err := rd.db.Select(&repository, statement, repositoryId)
+	err := rd.db.SelectContext(ctx, &repository, statement, repositoryId)
 
 	if err != nil {
 		return nil, err

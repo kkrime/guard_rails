@@ -47,6 +47,7 @@ func (rsi *repositoryServiceInstance) AddRepository(ctx context.Context, reposit
 	reachable := rsi.httpClient.IsUrlReachable(repository.Url)
 
 	if !reachable {
+		rsi.log.Errorf("unable to reach url %v", repository.Url)
 		return errors.NewRestError(424, Unable_To_Reach_Repository)
 	}
 
@@ -57,6 +58,7 @@ func (rsi *repositoryServiceInstance) AddRepository(ctx context.Context, reposit
 	if err != nil {
 		// check if duplicate add
 		if pgErr, ok := err.(*pgconn.PgError); ok {
+			rsi.log.Errorf("duplicate repository %+v", repository)
 			if pgErr.Code == db.Duplicate_Record_Code {
 				err = errors.NewRestError(409, Repository_Already_Added)
 			}
@@ -70,10 +72,12 @@ func (rsi *repositoryServiceInstance) GetRepository(ctx context.Context, reposit
 
 	repository, err := rsi.repositoryDb.GetRepositoryByName(ctx, repositoryName)
 	if err != nil {
+		rsi.log.Errorf("unable to get repository %v from the database, err %v", repositoryName, err)
 		return nil, err
 	}
 
 	if repository == nil {
+		rsi.log.Errorf("repository %v not found in the database, err %v", repositoryName, err)
 		return nil, errors.NewRestError(404, Repository_Not_Found)
 	}
 
@@ -85,11 +89,13 @@ func (rsi *repositoryServiceInstance) UpdateRepository(ctx context.Context, repo
 	reachable := rsi.httpClient.IsUrlReachable(repository.Url)
 
 	if !reachable {
+		rsi.log.Infof("unable to reach url %v", repository.Url)
 		return errors.NewRestError(424, Unable_To_Reach_Repository)
 	}
 
 	rowsAffected, err := rsi.repositoryDb.UpdateRepository(ctx, repository)
 	if err != nil {
+		rsi.log.Errorf("unable to update repository %v in the database, err %v", repository.Url, err)
 		return err
 	}
 
@@ -104,10 +110,12 @@ func (rsi *repositoryServiceInstance) DeleteRepository(ctx context.Context, repo
 
 	rowsAffected, err := rsi.repositoryDb.DeleteRepository(ctx, repositoryName)
 	if err != nil {
+		rsi.log.Errorf("unable to delete repository %v in the database, err %v", repositoryName, err)
 		return err
 	}
 
 	if rowsAffected == 0 {
+		rsi.log.Errorf("repository %v not found in the database, err %v", repositoryName, err)
 		return errors.NewRestError(404, Repository_Not_Found)
 	}
 

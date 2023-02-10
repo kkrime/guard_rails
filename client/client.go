@@ -13,6 +13,7 @@ type File interface {
 	Size() int64
 	Name() string
 	Reader() (io.ReadCloser, error)
+	IsBinary() (bool, error)
 }
 
 type GitClientProvider interface {

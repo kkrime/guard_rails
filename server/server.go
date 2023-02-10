@@ -34,13 +34,13 @@ func Init(db *sqlx.DB, config *config.Config, log *logrus.Logger) (*gin.Engine, 
 
 	// scan
 	scanGroup := repositoryGroup.Group("scan")
-	repositoryScanController, err := controller.NewScanController(db, config, log)
+	scanController, err := controller.NewScanController(db, config, log)
 	if err != nil {
 		return nil, err
 	}
 
-	scanGroup.POST("/:name", repositoryScanController.Scan)
-	scanGroup.GET("/:name", repositoryScanController.GetScans)
+	scanGroup.POST("/:name", scanController.QueueScan)
+	scanGroup.GET("/:name", scanController.GetScans)
 
 	return router, nil
 }

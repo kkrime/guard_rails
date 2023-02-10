@@ -10,7 +10,8 @@ CREATE TABLE public.repositories(
 	updated_at TIMESTAMP DEFAULT NOW(),
 	deleted_at TIMESTAMP DEFAULT NULL
 );
-CREATE UNIQUE INDEX no_duplicate_repository_names ON public.repositories(name,deleted_at)
+CREATE INDEX repositories_name ON public.repositories(name);
+CREATE UNIQUE INDEX no_duplicate_repository_name ON public.repositories(name,deleted_at)
    WHERE deleted_at IS null;
 CREATE UNIQUE INDEX no_duplicate_repository_urls  ON public.repositories(url)
    WHERE deleted_at IS null;
@@ -31,3 +32,7 @@ CREATE TABLE public.scans(
 	started_at TIMESTAMP DEFAULT NULL,
 	ended_at   TIMESTAMP DEFAULT NULL
 );
+CREATE UNIQUE INDEX no_duplicate_queued_scans  ON public.scans(repository_id,status)
+   WHERE status = 'QUEUED';
+CREATE UNIQUE INDEX no_duplicate_in_progrss_scans  ON public.scans(repository_id,status)
+   WHERE status = 'IN PROGRESS';

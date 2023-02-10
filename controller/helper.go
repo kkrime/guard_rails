@@ -46,5 +46,5 @@ func AbortAndError(c *gin.Context, err error) {
 }
 
 func createLogger(gl getLogger, ctx context.Context) *logrus.Entry {
-	return gl.getLogger().WithContext(ctx).WithField("requestID", ctx.Value("X-Request-ID"))
+	return gl.getLogger().WithContext(ctx).WithField("RequestID", ctx.Value("X-Request-ID"))
 }

@@ -168,10 +168,6 @@ func (s *TokenScannerTestSuite) Testscan() {
 
 	for _, test := range tests {
 		s.T().Run(test.name, func(t2 *testing.T) {
-			// log, logBuffer, logWriter := support.NewTestLogger()
-
-			// out, err := ls.updateTransactionLimit(context.TODO(), nil, nil, &test.transactionLimit)
-			// logWriter.Flush()
 
 			tokenRegex, err := regexp.Compile(test.token)
 			if err != nil {
@@ -185,14 +181,8 @@ func (s *TokenScannerTestSuite) Testscan() {
 
 			tokenScanner := newTokenScanner(tokenRegex, &config)
 			scanResult := tokenScanner.Scan(test.file)
-			fmt.Printf("%+v", scanResult)
 
 			assert.Equal(s.T(), &test.scanResult, scanResult)
-			// assert.Equal(s.T(), test.err, err)
-
-			// for _, expectedLog := range test.expectedLog {
-			// assert.Contains(s.T(), logBuffer.String(), expectedLog)
-			// }
 		})
 	}
 }

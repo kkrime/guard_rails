@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"guard_rails/model"
 
 	"github.com/jmoiron/sqlx"
@@ -57,8 +56,6 @@ func (sd *db) CreateNewScan(ctx context.Context, repositoryId int64) (*model.Sca
             *
         ;`
 
-	fmt.Println("HERE")
-
 	err := sd.db.GetContext(ctx, scan, statement, repositoryId)
 	if err != nil {
 		return nil, err
@@ -82,6 +79,8 @@ func (sd *db) GetScans(ctx context.Context, repositoryName string) ([]model.Scan
                     name = $1 AND
                     deleted_at IS NULL
             )
+        ORDER BY
+            id DESC
         ;`
 
 	err := sd.db.SelectContext(ctx, &scans, statement, repositoryName)
@@ -93,7 +92,7 @@ func (sd *db) GetScans(ctx context.Context, repositoryName string) ([]model.Scan
 
 }
 
-func (sd *db) UpdateScanStatus(scanId int64, status model.ScanStatus) error {
+func (sd *db) UpdateScanStatus(ctx context.Context, scanId int64, status model.ScanStatus) error {
 
 	statement := `
         UPDATE
@@ -104,12 +103,12 @@ func (sd *db) UpdateScanStatus(scanId int64, status model.ScanStatus) error {
             id = $2
         ;`
 
-	_, err := sd.db.Exec(statement, status, scanId)
+	_, err := sd.db.ExecContext(ctx, statement, status, scanId)
 
 	return err
 }
 
-func (sd *db) StartScan(scanId int64) error {
+func (sd *db) StartScan(ctx context.Context, scanId int64) error {
 
 	statement := `
         UPDATE
@@ -121,12 +120,12 @@ func (sd *db) StartScan(scanId int64) error {
             id = $2
         ;`
 
-	_, err := sd.db.Exec(statement, model.InProgress, scanId)
+	_, err := sd.db.ExecContext(ctx, statement, model.InProgress, scanId)
 
 	return err
 }
 
-func (sd *db) StopScan(scanId int64, findings model.Findings, status model.ScanStatus) error {
+func (sd *db) StopScan(ctx context.Context, scanId int64, findings model.Findings, status model.ScanStatus) error {
 	var (
 		findingsJson []byte
 		err          error
@@ -150,7 +149,7 @@ func (sd *db) StopScan(scanId int64, findings model.Findings, status model.ScanS
             id = $3
         ;`
 
-	_, err = sd.db.Exec(statement, status, findingsJson, scanId)
+	_, err = sd.db.ExecContext(ctx, statement, status, findingsJson, scanId)
 
 	return err
 }

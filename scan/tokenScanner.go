@@ -21,31 +21,32 @@ func NewTokenScanner(tokenConfig *config.TokenScannerConfig) (RepositoryScanner,
 		return nil, err
 	}
 
+	return newTokenScanner(tokenRegex, tokenConfig), nil
+}
+
+func newTokenScanner(
+	tokenRegex *regexp.Regexp,
+	tokenConfig *config.TokenScannerConfig,
+) *tokenScanner {
 	return &tokenScanner{
 		token:  tokenRegex,
 		config: tokenConfig,
-	}, nil
+	}
+
 }
 
 func (ts *tokenScanner) Scan(file client.File) *ScanResult {
 	result := &ScanResult{
 		Passed: true,
 	}
-	// result := &ScanResult{
-	// 	Passed: false,
-	// 	Findings: []model.Finding{
-	// 		{
-	// 			Type: "one",
-	// 		},
-	// 	},
-	// }
-	// return result
 
 	fileReader, err := file.Reader()
 	if err != nil {
 		result.Err = err
-		return nil
+		result.Passed = false
+		return result
 	}
+	defer fileReader.Close()
 
 	reader := bufio.NewReader(fileReader)
 
@@ -58,8 +59,9 @@ func (ts *tokenScanner) Scan(file client.File) *ScanResult {
 			if err == io.EOF {
 				break
 			}
+			result.Passed = false
 			result.Err = err
-			return nil
+			return result
 		}
 
 		if line == nil {
@@ -67,10 +69,13 @@ func (ts *tokenScanner) Scan(file client.File) *ScanResult {
 		}
 
 		if ts.token.Match(line) {
+			// mark result as failed
+			result.Passed = false
+
 			// report finding
 			finding := model.Finding{
-				ScanData: &ts.config.ScanData,
-				MetaData: &ts.config.MetaData,
+				ScanData: ts.config.ScanData,
+				MetaData: ts.config.MetaData,
 				Location: model.Location{
 					Path: file.Name(),
 					Positions: model.Positions{
@@ -81,7 +86,6 @@ func (ts *tokenScanner) Scan(file client.File) *ScanResult {
 				},
 			}
 			result.Findings = append(result.Findings, finding)
-			result.Passed = false
 		}
 	}
 

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"guard_rails/config"
 	"guard_rails/db"
 	"guard_rails/logger"
@@ -23,11 +22,9 @@ func main() {
 func run(log *logrus.Logger) error {
 
 	config, err := config.ReadConfig()
-	fmt.Println(config)
 	if err != nil {
 		return err
 	}
-	fmt.Println(config)
 
 	db, err := db.Init(&config.Postgres)
 	if err != nil {

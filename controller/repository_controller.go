@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"guard_rails/model"
 	"guard_rails/service"
 	"strings"
@@ -34,7 +33,6 @@ func (rc *repositoryController) AddRepository(ctx *gin.Context) {
 
 	err := ctx.BindJSON(repository)
 	if err != nil {
-		fmt.Printf("%T", err)
 		AbortAndError(ctx, err)
 		return
 	}

@@ -33,7 +33,7 @@ func NewDbObject(database *sqlx.DB) *db {
 type RepositoryDb interface {
 	AddRepository(ctx context.Context, repository *model.Repository) error
 	GetRepositoryByName(ctx context.Context, repositoryName string) (*model.Repository, error)
-	GetRepositoryById(repositoryId int64) (*model.Repository, error)
+	GetRepositoryById(ctx context.Context, repositoryId int64) (*model.Repository, error)
 	UpdateRepository(ctx context.Context, repository *model.Repository) (int64, error)
 	DeleteRepository(ctx context.Context, repositoryName string) (int64, error)
 }
@@ -41,9 +41,9 @@ type ScanDb interface {
 	GetScanWithStatus(ctx context.Context, repositoryId int64, status []model.ScanStatus) (*model.Scan, error)
 	CreateNewScan(ctx context.Context, repositoryId int64) (*model.Scan, error)
 	GetScans(ctx context.Context, repositoryName string) ([]model.Scan, error)
-	UpdateScanStatus(scanId int64, status model.ScanStatus) error
-	StartScan(scanId int64) error
-	StopScan(scanId int64, findings model.Findings, status model.ScanStatus) error
+	UpdateScanStatus(ctx context.Context, scanId int64, status model.ScanStatus) error
+	StartScan(ctx context.Context, scanId int64) error
+	StopScan(ctx context.Context, scanId int64, findings model.Findings, status model.ScanStatus) error
 }
 
 func Init(config *config.PostgresConfig) (*sqlx.DB, error) {
