@@ -15,9 +15,9 @@ type scanController struct {
 	log                 *logrus.Logger
 }
 
-func NewScanController(db *sqlx.DB, config *config.Config, log *logrus.Logger) (ScanController, error) {
+func NewScanController(database *sqlx.DB, config *config.Config, log *logrus.Logger) (ScanController, error) {
 
-	ScanServiceProvider, err := service.NewScanServiceProvider(db, config)
+	ScanServiceProvider, err := service.NewScanServiceProvider(database, config)
 	if err != nil {
 		return nil, err
 	}

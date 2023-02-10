@@ -47,33 +47,26 @@ type ScanDb interface {
 }
 
 func Init(config *config.PostgresConfig) (*sqlx.DB, error) {
-	// const (
-	// 	host     = "localhost"
-	// 	port     = 5432
-	// 	user     = "postgres"
-	// 	password = "postgres"
-	// 	dbname   = "guard_rails"
-	// )
 
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		config.Host, config.Port, config.User, config.Password, config.Dbname)
 
-	db, err := sqlx.Open("pgx", dsn)
+	database, err := sqlx.Open("pgx", dsn)
 	if err != nil {
 		return nil, err
 	}
 
 	dbLog := logger.CreateNewLogger()
 
-	db.DB = sqldblogger.OpenDriver(dsn, db.DB.Driver(), logrusadapter.New(dbLog),
+	database.DB = sqldblogger.OpenDriver(dsn, database.DB.Driver(), logrusadapter.New(dbLog),
 		sqldblogger.WithTimeFormat(sqldblogger.TimeFormatRFC3339),
 		sqldblogger.WithLogDriverErrorSkip(true),
 		sqldblogger.WithSQLQueryAsMessage(true))
 
-	err = db.Ping()
+	err = database.Ping()
 	if err != nil {
 		return nil, err
 	}
 
-	return db, nil
+	return database, nil
 }

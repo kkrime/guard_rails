@@ -26,13 +26,13 @@ func run(log *logrus.Logger) error {
 		return err
 	}
 
-	db, err := db.Init(&config.Postgres)
+	database, err := db.Init(&config.Postgres)
 	if err != nil {
 		return err
 	}
 	log.Info("connected to database")
 
-	r, err := server.Init(db, config, log)
+	r, err := server.Init(database, config, log)
 	if err != nil {
 		return err
 	}

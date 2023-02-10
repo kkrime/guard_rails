@@ -19,9 +19,9 @@ func (rc *repositoryController) getLogger() *logrus.Logger {
 	return rc.log
 }
 
-func NewRepoitoryController(db *sqlx.DB, log *logrus.Logger) RepositoryController {
+func NewRepoitoryController(database *sqlx.DB, log *logrus.Logger) RepositoryController {
 
-	repositoryServiceProvider := service.NewRepositoryServiceProvider(db)
+	repositoryServiceProvider := service.NewRepositoryServiceProvider(database)
 	return &repositoryController{
 		repositoryServiceProvider: repositoryServiceProvider,
 		log:                       log,

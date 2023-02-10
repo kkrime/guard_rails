@@ -10,7 +10,7 @@ import (
 	requestid "github.com/sumit-tembe/gin-requestid"
 )
 
-func Init(db *sqlx.DB, config *config.Config, log *logrus.Logger) (*gin.Engine, error) {
+func Init(database *sqlx.DB, config *config.Config, log *logrus.Logger) (*gin.Engine, error) {
 
 	router := gin.New()
 	router.Use(gin.Logger())
@@ -21,7 +21,7 @@ func Init(db *sqlx.DB, config *config.Config, log *logrus.Logger) (*gin.Engine, 
 
 	// repository
 	repositoryGroup := v1.Group("repository")
-	repositoryController := controller.NewRepoitoryController(db, log)
+	repositoryController := controller.NewRepoitoryController(database, log)
 
 	// add repository
 	repositoryGroup.POST("", repositoryController.AddRepository)
@@ -34,7 +34,7 @@ func Init(db *sqlx.DB, config *config.Config, log *logrus.Logger) (*gin.Engine, 
 
 	// scan
 	scanGroup := repositoryGroup.Group("scan")
-	scanController, err := controller.NewScanController(db, config, log)
+	scanController, err := controller.NewScanController(database, config, log)
 	if err != nil {
 		return nil, err
 	}
